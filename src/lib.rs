@@ -14,8 +14,10 @@ pub enum Error {
 
 impl<T> CircularBuffer<T> {
     pub fn new(capacity: usize) -> Self {
+        let mut data = Vec::with_capacity(capacity);
+        data.resize_with(capacity, || None);
         CircularBuffer {
-            data: vec![None; capacity],
+            data,
             start: 0,
             end: 0,
             capacity,
@@ -44,7 +46,8 @@ impl<T> CircularBuffer<T> {
     }
 
     pub fn clear(&mut self) {
-        self.data = vec![None; self.capacity];
+        self.data.clear();
+        self.data.resize_with(self.capacity, || None);
         self.start = 0;
         self.end = 0;
         self.size = 0;
