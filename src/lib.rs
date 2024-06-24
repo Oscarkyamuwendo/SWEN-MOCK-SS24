@@ -2,6 +2,8 @@ pub struct CircularBuffer<T> {
     data: Vec<Option<T>>,
     start: usize,
     end: usize,
+    capacity: usize,
+    size: usize,
 }
 
 #[derive(Debug, PartialEq, Eq)]
@@ -12,28 +14,50 @@ pub enum Error {
 
 impl<T> CircularBuffer<T> {
     pub fn new(capacity: usize) -> Self {
-        unimplemented!(
-            "Construct a new CircularBuffer with the capacity to hold {}.",
-            match capacity {
-                1 => "1 element".to_string(),
-                _ => format!("{capacity} elements"),
-            }
-        );
+        CircularBuffer {
+            data: vec![None; capacity],
+            start: 0,
+            end: 0,
+            capacity,
+            size: 0,
+        }
     }
 
-    pub fn write(&mut self, _element: T) -> Result<(), Error> {
-        unimplemented!("Write the passed element to the CircularBuffer or return FullBuffer error if CircularBuffer is full.");
+    pub fn write(&mut self, element: T) -> Result<(), Error> {
+        if self.size == self.capacity {
+            return Err(Error::FullBuffer);
+        }
+        self.data[self.end] = Some(element);
+        self.end = (self.end + 1) % self.capacity;
+        self.size += 1;
+        Ok(())
     }
 
     pub fn read(&mut self) -> Result<T, Error> {
-        unimplemented!("Read the oldest element from the CircularBuffer or return EmptyBuffer error if CircularBuffer is empty.");
+        if self.size == 0 {
+            return Err(Error::EmptyBuffer);
+        }
+        let element = self.data[self.start].take().unwrap();
+        self.start = (self.start + 1) % self.capacity;
+        self.size -= 1;
+        Ok(element)
     }
 
     pub fn clear(&mut self) {
-        unimplemented!("Clear the CircularBuffer.");
+        self.data = vec![None; self.capacity];
+        self.start = 0;
+        self.end = 0;
+        self.size = 0;
     }
 
-    pub fn overwrite(&mut self, _element: T) {
-        unimplemented!("Write the passed element to the CircularBuffer, overwriting the existing elements if CircularBuffer is full.");
+    pub fn overwrite(&mut self, element: T) {
+        if self.size == self.capacity {
+            self.data[self.start] = Some(element);
+            self.start = (self.start + 1) % self.capacity;
+        } else {
+            self.data[self.end] = Some(element);
+            self.end = (self.end + 1) % self.capacity;
+            self.size += 1;
+        }
     }
 }
